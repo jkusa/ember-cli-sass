@@ -1,19 +1,60 @@
 'use strict';
 /* eslint-env node */
 var SassCompilerFactory = require('broccoli-sass-source-maps');
+var LESSCompiler = require('broccoli-less-single');
 var path = require('path');
 var VersionChecker = require('ember-cli-version-checker');
 var Funnel = require('broccoli-funnel');
 var mergeTrees = require('broccoli-merge-trees');
 
-function SASSPlugin(optionsFn) {
-  this.name = 'ember-cli-sass';
+
+function Plugin(optionsFn) {
+  this.name = 'ember-cli-sass-less';
   this.optionsFn = optionsFn;
-  this.ext = ['scss', 'sass'];
+  this.ext = ['scss', 'sass', 'less'];
 }
 
-SASSPlugin.prototype.toTree = function(tree, inputPath, outputPath, inputOptions) {
-  var options = Object.assign({}, this.optionsFn(), inputOptions);
+Plugin.prototype.toTree = function(tree, inputPath, outputPath, inputOptions) {
+  var sass = this.sassToTree(...arguments);
+  var less = this.lessToTree(...arguments);
+  return mergeTrees(sass.concat(less), inputOptions);
+}
+
+Plugin.prototype.lessToTree = function(tree, inputPath, outputPath, inputOptions) {
+  let options = Object.assign(
+    {
+      cacheInclude: [/.*\.(css|less)$/],
+    },
+    this.optionsFn().lessOptions,
+    inputOptions,
+  );
+
+  let inputExt = '.less';
+  let paths = options.outputPaths || {
+    app: options.registry.app.options.outputPaths.app.css, };
+  let lessFiles = options.lessFiles || [];
+  let lessSuffix = options.lessPrefix || inputExt;
+
+  /* remove `registry` object we pass into Less */
+  delete options.registry;
+
+  let trees = Object.keys(paths).map(function (file) {
+    if (lessFiles.includes(file)) {
+      let input = path.join(inputPath, file + inputExt);
+      let filePath = paths[file];
+      let dir = path.dirname(filePath) 
+      let ext = path.extname(filePath);
+      let name = path.basename(filePath, ext)
+      let output = path.join('/', dir, name + lessSuffix + ext);
+      return new LESSCompiler([tree], input, output, options);
+    }
+  }).filter(t => t);
+
+  return trees;
+};
+
+Plugin.prototype.sassToTree = function(tree, inputPath, outputPath, inputOptions) {
+  var options = Object.assign({}, this.optionsFn().sassOptions, inputOptions);
   var inputTrees;
 
   if (options.onlyIncluded) {
@@ -37,7 +78,7 @@ SASSPlugin.prototype.toTree = function(tree, inputPath, outputPath, inputOptions
     } catch (e) {
       var error = new Error(
         'Could not find the default SASS implementation. Run the default blueprint:\n' +
-        '   ember g ember-cli-sass\n' +
+        '   ember g ember-cli-sass-less\n' +
         'Or install an implementation such as "node-sass" and add an implementation option. For example:\n' +
         '   sassOptions: {implementation: require("node-sass")}');
       error.type = 'Sass Plugin Error';
@@ -49,21 +90,23 @@ SASSPlugin.prototype.toTree = function(tree, inputPath, outputPath, inputOptions
   var SassCompiler = SassCompilerFactory(options.implementation);
   var ext = options.extension || 'scss';
   var paths = options.outputPaths;
+  var excludeFiles = options.excludeFiles || [];
   var trees = Object.keys(paths).map(function(file) {
-    var input = path.join(inputPath, file + '.' + ext);
-    var output = paths[file];
-    return new SassCompiler(inputTrees, input, output, options);
-  });
+    if (!excludeFiles.includes(file)) {
+      var input = path.join(inputPath, file + '.' + ext);
+      var output = paths[file];
+      return new SassCompiler(inputTrees, input, output, options);
+    }
+  }).filter(t => t);
 
   if (options.passthrough) {
     trees.push(new Funnel(tree, options.passthrough));
   }
-
-  return mergeTrees(trees);
+  return trees;
 };
 
 module.exports = {
-  name:  'ember-cli-sass',
+  name:  'ember-cli-sass-less',
 
   shouldSetupRegistryInIncluded: function() {
     let checker = new VersionChecker(this);
@@ -107,8 +150,33 @@ module.exports = {
     return options;
   },
 
+  lessOptions: function () {
+    let env = process.env.EMBER_ENV;
+    let app = this.app;
+
+    // fix issue with nested addons, in which case our app.options hash is actually on app.app.options.
+    // n.b. this can be removed once ember-cli better supports nested addons.
+    //   (see https://github.com/gdub22/ember-cli-less/issues/36)
+    if (app && !app.options && app.app) {
+      app = app.app;
+    }
+
+    let options = (app && app.options && app.options.lessOptions) || {};
+
+    if (options.sourceMap === undefined && env === 'development') {
+      options.sourceMap = true;
+    }
+
+    return options;
+  },
+
   setupPreprocessorRegistry: function(type, registry) {
-    registry.add('css', new SASSPlugin(this.sassOptions.bind(this)));
+    registry.add('css', new Plugin((function() {
+      return {
+        sassOptions: this.sassOptions.call(this),
+        lessOptions: this.lessOptions.call(this)
+      }
+    }).bind(this)));
 
     // prevent conflict with broccoli-sass if it's installed
     if (registry.remove) registry.remove('css', 'broccoli-sass');

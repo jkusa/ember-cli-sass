@@ -9,17 +9,21 @@ module.exports = function(defaults) {
     outputPaths: {
       app: {
         css: {
-          'app': '/assets/dummy.css',
-          'output-path': '/assets/output-path.css'
-        }
-      }
+          app: "/assets/dummy.css",
+          "output-path": "/assets/output-path.css",
+          "less-file": "/assets/less-file.css",
+        },
+      },
     },
-    sassOptions: {
+    sassOptions: { //sass config https://github.com/adopted-ember-addons/ember-cli-sass
       implementation: sass,
-      includePaths: [
-        'bower_components/SpinKit/scss',
-      ]
-    }
+      includePaths: ["node_modules/spinkit/scss/"],
+      excludeFiles: ["less-file"], //exclude from sass
+    },
+    lessOptions: { // less config from addon https://github.com/gpoitch/ember-cli-less#usage
+      lessFiles: ["app", "less-file"], //include for less processing
+      paths: ["node_modules/bootstrap/less/"],
+    },
   });
 
   /*

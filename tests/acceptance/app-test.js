@@ -30,6 +30,21 @@ module('Acceptance | app', function(hooks) {
   
     assert.ok(getCSS(find('h1'), 'font-family'));
   });
+
+  test('app.less is loaded', async function(assert) {
+    await visit('/');
+    assert.equal(getCSS(find('#title'), 'color'), 'rgb(255, 0, 0)');
+  });
+
+  test('less-file.less is loaded', async function(assert) {
+    await visit('/');
+    assert.equal(getCSS(find('#less-file-css'), 'color'), 'rgb(0, 0, 255)');
+  });
+
+  test('less import', async function(assert) {
+    await visit('/');
+    assert.equal(getCSS(find('#less-import'), 'color'), 'rgb(91, 192, 222)');
+  });
 });
 
 

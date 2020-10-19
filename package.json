@@ -1,17 +1,18 @@
 {
-  "name": "ember-cli-sass",
-  "version": "10.0.0",
-  "description": "Use Sass to preprocess your ember-cli app's files, with support for sourceMaps and include paths",
+  "name": "ember-cli-sass-less",
+  "version": "0.0.0",
+  "description": "Combines ember-cli-sass & ember-cli-less into one two. Mainly for migration to sass",
   "keywords": [
     "ember-addon",
-    "sass"
+    "sass",
+    "less"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/adopted-ember-addons/ember-cli-sass.git"
+    "url": "git://github.com/jkusa/ember-cli-sass-less.git"
   },
   "license": "MIT",
-  "author": "@aexmachina",
+  "author": "Jon Kilroy <jkusa7@gmail.com>",
   "directories": {
     "doc": "doc",
     "test": "tests"
@@ -25,14 +26,16 @@
   },
   "dependencies": {
     "broccoli-funnel": "^2.0.1",
+    "broccoli-less-single": "^1.1.0",
     "broccoli-merge-trees": "^3.0.1",
     "broccoli-sass-source-maps": "^4.0.0",
     "ember-cli-version-checker": "^2.1.0"
   },
   "devDependencies": {
+    "bootstrap": "^3.4.1",
     "broccoli-asset-rev": "^2.7.0",
     "broccoli-clean-css": "^1.1.0",
-    "ember-cli": "^3.4.1",
+    "ember-cli": "^3.22.0",
     "ember-cli-babel": "^6.6.0",
     "ember-cli-dependency-checker": "^2.0.0",
     "ember-cli-eslint": "^4.2.1",
@@ -55,16 +58,13 @@
     "eslint-plugin-node": "^6.0.1",
     "loader.js": "^4.2.3",
     "qunit-dom": "^0.7.1",
-    "sass": "^1.3.0"
+    "sass": "^1.27.0",
+    "spinkit": "^1.2.5"
   },
   "engines": {
     "node": ">= 10.*"
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"
-  },
-  "bugs": {
-    "url": "https://github.com/adopted-ember-addons/ember-cli-sass/issues"
-  },
-  "homepage": "https://github.com/adopted-ember-addons/ember-cli-sass"
+  }
 }
