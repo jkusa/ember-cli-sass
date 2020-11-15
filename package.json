@@ -1,6 +1,6 @@
 {
   "name": "ember-cli-sass-less",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Combines ember-cli-sass & ember-cli-less into one two. Mainly for migration to sass",
   "keywords": [
     "ember-addon",
